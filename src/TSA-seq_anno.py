@@ -1,7 +1,7 @@
 #!/home/yangz6/Software/Python-2.7.5/python-2.7.5
 # Programmer : Yang Zhang 
 # Contact: yzhan116@illinois.edu
-# Last-modified: 21 Jan 2017 01:41:45
+# Last-modified: 18 Jan 2018 15:15:14
 
 import os,sys,argparse
 from progressbar import ProgressBar
@@ -114,7 +114,7 @@ def Main():
         region = region_list[nn]
         region.region_init(exclude_list, genome_size)
     # annotate 
-    print >>sys.stderr, "Annotation DHS"
+    print >>sys.stderr, "Annotation Region"
     progress = ProgressBar()
     for nn in progress(range(len(region_list))):
         region = region_list[nn]

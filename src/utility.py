@@ -1,7 +1,7 @@
 #!/home/yangz6/Software/Python-2.7.5/python-2.7.5
 # Programmer : Yang Zhang 
 # Contact: yzhan116@illinois.edu
-# Last-modified: 21 Jan 2017 01:55:47
+# Last-modified: 06 Dec 2017 01:53:25
 
 import os,sys,argparse
 import math
@@ -189,6 +189,8 @@ class Region(BED):
                 if size > o_len:
                     o_len = size
                     o_group = name
+            if o_group is None:
+                o_group = 'NA'
             return o_group
     def __get_bam_cov(self, bam):
         '''
