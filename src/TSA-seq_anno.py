@@ -1,7 +1,7 @@
 #!/home/yangz6/Software/Python-2.7.5/python-2.7.5
 # Programmer : Yang Zhang 
 # Contact: yzhan116@illinois.edu
-# Last-modified: 18 Jan 2018 15:15:14
+# Last-modified: 18 Jan 2018 15:24:10
 
 import os,sys,argparse
 from progressbar import ProgressBar
@@ -41,7 +41,7 @@ def LoadExclude(file_list):
 
 def OptionsCheck():
     text = ""
-    text += "# DHS peak file: %s\n" % (args.bed)
+    text += "# Bed file: %s\n" % (args.bed)
     if args.update:
         text += "# update existing annotation: True\n"
     else:
@@ -122,7 +122,6 @@ def Main():
             anno = anno_list[nn]
             label = label_list[nn]
             mode = mode_list[nn]
-            region.get_anno(anno, label, mode, genome_size)
             try:
                 region.get_anno(anno, label, mode, genome_size)
             except:
