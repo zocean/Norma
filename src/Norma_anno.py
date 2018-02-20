@@ -1,7 +1,7 @@
 #!/home/yangz6/Software/Python-2.7.5/python-2.7.5
 # Programmer : Yang Zhang 
 # Contact: yzhan116@illinois.edu
-# Last-modified: 31 Jan 2018 16:04:19
+# Last-modified: 19 Feb 2018 19:22:53
 
 import os,sys,argparse
 from progressbar import ProgressBar
@@ -10,7 +10,6 @@ from bx.bbi.bigwig_file import BigWigFile
 import tabix
 import random
 '''import custom function/class'''
-from TFBS_Evo.my_utility import *
 from utility import *
 
 def parse_arg():
@@ -130,9 +129,9 @@ def Main():
     print >>sys.stderr, "Annotation bed done"
     # write to output file
     if args.output == args.bed: # re-annotate existing file
-        fout = WriteToFile(args.output+'.tmp')
+        fout = open(args.output+'.tmp', 'w')
     else:
-        fout = WriteToFile(args.output)
+        fout = open(args.output, 'w')
     print >>fout, region_list[0].header()
     region_list = sorted(region_list, key = lambda bed: (bed.chrom, bed.start))
     for region in region_list:
