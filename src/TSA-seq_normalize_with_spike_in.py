@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # Programmer : Yang Zhang
 # Contact: yzhan116@illinois.edU
-# Last-modified: 16 Feb 2017 15:47:19
+# Last-modified: 01 Mar 2018 21:19:59
 
 import os,sys,argparse
 from math import log
@@ -112,16 +112,20 @@ def BinToWin(bin_hash,step):
     chr_list = bin_hash.keys()
     # create a hash dictionary for read count in window
     win_hash = {}
-    for chrom in chr_list:
-        # initialization window hash dictionary
-        win_no = len(bin_hash[chrom]) - step + 1
-        win_hash[chrom] = [0 for n in range(win_no)]
-        count_list = bin_hash[chrom]
-        buffer = sum(count_list[0:step])
-        win_hash[chrom][0] = buffer
-        for j in range(1,win_no):
-            win_hash[chrom][j] = buffer + count_list[j-1+step] - count_list[j-1]
-            buffer = win_hash[chrom][j] # update buffer
+    if step == 1:
+        for chrom in chr_list:
+            win_hash[chrom] = list(bin_hash[chrom])
+    else:
+        for chrom in chr_list:
+            # initialization window hash dictionary
+            win_no = len(bin_hash[chrom]) - step + 1
+            win_hash[chrom] = [0 for n in range(win_no)]
+            count_list = bin_hash[chrom]
+            buffer = sum(count_list[0:step])
+            win_hash[chrom][0] = buffer
+            for j in range(1,win_no):
+                win_hash[chrom][j] = buffer + count_list[j-1+step] - count_list[j-1]
+                buffer = win_hash[chrom][j] # update buffer
     return win_hash
 
 def CalAve(table):
@@ -195,7 +199,8 @@ def AdjustNoPrimay(adjusted_win_pri, adjusted_win_no, R):
         pri_list = adjusted_win_pri[chrom]
         no_list = adjusted_win_no[chrom]
         for nn in range(len(out_list)):
-            out_list[nn] = max(0.0, pri_list[nn]-no_list[nn]*ratio/R)
+            if pre_list[nn] is not None and no_lit[nn] is not None:
+                out_list[nn] = max(0.0, pri_list[nn]-no_list[nn]*ratio/R)
     return norm_win
 
 def GetRatio(norm_win):
