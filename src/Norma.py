@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # Programmer : Yang Zhang
 # Contact: yzhan116@illinois.edu
-# Last-modified: 16 Feb 2017 15:26:33
+# Last-modified: 02 Mar 2018 22:23:58
 
 import os,sys,argparse
 from math import log
@@ -107,16 +107,20 @@ def BinToWin(bin_hash,step):
     chr_list = bin_hash.keys()
     # create a hash dictionary for read count in window
     win_hash = {}
-    for chrom in chr_list:
-        # initialization window hash dictionary
-        win_no = len(bin_hash[chrom]) - step + 1
-        win_hash[chrom] = [0 for n in range(win_no)]
-        count_list = bin_hash[chrom]
-        buffer = sum(count_list[0:step])
-        win_hash[chrom][0] = buffer
-        for j in range(1,win_no):
-            win_hash[chrom][j] = buffer + count_list[j-1+step] - count_list[j-1]
-            buffer = win_hash[chrom][j] # update buffer
+    if step == 1:
+        for chrom in chr_list:
+            win_hash[chrom] = list(bin_hash[chrom])
+    else:
+        for chrom in chr_list:
+            # initialization window hash dictionary
+            win_no = len(bin_hash[chrom]) - step + 1
+            win_hash[chrom] = [0 for n in range(win_no)]
+            count_list = bin_hash[chrom]
+            buffer = sum(count_list[0:step])
+            win_hash[chrom][0] = buffer
+            for j in range(1,win_no):
+                win_hash[chrom][j] = buffer + count_list[j-1+step] - count_list[j-1]
+                buffer = win_hash[chrom][j] # update buffer
     return win_hash
 
 def CalAve(table):
@@ -183,15 +187,15 @@ def WriteWig(output_file,hash_table,genome_table,resolution,step):
     #print >>fo, "track type=wiggle_0 name=\""+ output_file + "\" description=\"" + output_file + "\" visibility=full autoScale=on color=50,150,255"
     for ii in range(len(chrs)):
         chr_list = hash_table[chrs[ii]]
+        is_end = False
         print >>fo, "variableStep chrom=" + chrs[ii] + " span=" + str(resolution)
         for jj in range(len(chr_list)):
-            #if chr_list[j] != 0.0:
-            if jj*resolution + win_half > genome_table[chrs[ii]]:
-                warning("window position %d is larger than chromosome size %d for chromosome %s" % (jj*resolution + win_half, genome_table[chrs[ii]], chrs[ii]))
-                continue
+            if is_end:
+                break
             if jj*resolution + win_half + resolution > genome_table[chrs[ii]]: # last window
-                new_span = jj*resolution + win_half + resolution - genome_table[chrs[ii]]
+                new_span = genome_table[chrs[ii]] - jj*resolution - win_half
                 print >>fo, "variableStep chrom=" + chrs[ii] + " span=" + str(new_span)
+                is_end = True
             print >>fo, "%d\t%.6f" % (jj*resolution + win_half, log(chr_list[jj],2))
     fo.flush()
     fo.close()
@@ -252,7 +256,7 @@ def Main():
     # report parameters
     ReportOptions()
     # check whether the arguments are in possible range
-    if (args.res > (args.win/2)):
+    if (args.res > (args.win/2)) and args.res != args.win:
         sys.exit("resolution can not be larger than half size of sliding window")
     elif (args.res < 1):
         sys.exit("resultion can not be less than 1")
