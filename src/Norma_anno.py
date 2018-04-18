@@ -1,7 +1,7 @@
 #!/home/yangz6/Software/Python-2.7.5/python-2.7.5
 # Programmer : Yang Zhang 
 # Contact: yzhan116@illinois.edu
-# Last-modified: 19 Feb 2018 19:22:53
+# Last-modified: 17 Apr 2018 23:32:46
 
 import os,sys,argparse
 from progressbar import ProgressBar
@@ -69,7 +69,7 @@ def Main():
     else:
         assert len(args.anno) == len(args.label)
         assert len(args.anno) == len(args.mode)
-    OptionsCheck()
+    options_check()
     # load genome fasta/size
     genome = pysam.Fastafile(args.genome)
     genome_size = load_genome_size(args.genome_size)
