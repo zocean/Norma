@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # Programmer : Yang Zhang
 # Contact: yzhan116@illinois.edU
-# Last-modified: 16 Feb 2017 15:47:19
+# Last-modified: 01 Mar 2018 20:27:35
 
 import os,sys,argparse
 from math import log
@@ -286,7 +286,7 @@ def ReportOptions():
     text += "# resolution of output wig files: %d\n" % (args.res)
     text += "# R: %.6f\n" % (args.R)
     text += "# genome chromosome size file: %s\n" % (args.genome)
-    text += "# output file name prefix: %s" % (args.output)
+    text += "# output file name prefix: %s\n" % (args.output)
     if args.wig2bw == 'sys':
         text += "# wigToBigWig available in system PATH: True\n"
     else:
