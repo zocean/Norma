@@ -1,7 +1,7 @@
 #!/home/yangz6/Software/Python-2.7.5/python-2.7.5
 # Programmer : Yang Zhang 
 # Contact: yzhan116@illinois.edu
-# Last-modified: 21 Jan 2017 01:41:45
+# Last-modified: 17 Apr 2018 23:32:46
 
 import os,sys,argparse
 from progressbar import ProgressBar
@@ -10,10 +10,9 @@ from bx.bbi.bigwig_file import BigWigFile
 import tabix
 import random
 '''import custom function/class'''
-from TFBS_Evo.my_utility import *
 from utility import *
 
-def ParseArg():
+def parse_arg():
     ''' This Function Parse the Argument '''
     p=argparse.ArgumentParser( description = 'Example: %(prog)s -h', epilog='Library dependency :')
     p.add_argument('-v','--version',action='version',version='%(prog)s 0.1')
@@ -31,7 +30,7 @@ def ParseArg():
         exit(1)
     return p.parse_args()
 
-def LoadExclude(file_list):
+def load_exclude(file_list):
     exclude_list = []
     if file_list is None:
         return exclude_list
@@ -39,9 +38,9 @@ def LoadExclude(file_list):
         exclude_list.append(tabix.open(filename))
     return exclude_list
 
-def OptionsCheck():
+def options_check():
     text = ""
-    text += "# DHS peak file: %s\n" % (args.bed)
+    text += "# Bed file: %s\n" % (args.bed)
     if args.update:
         text += "# update existing annotation: True\n"
     else:
@@ -62,7 +61,7 @@ def OptionsCheck():
 
 def Main():
     global args
-    args=ParseArg()
+    args = parse_arg()
     # check parameter
     if args.anno is None and args.label is None and args.mode is None:
         args.anno = []; args.label = []; args.mode = []
@@ -70,21 +69,21 @@ def Main():
     else:
         assert len(args.anno) == len(args.label)
         assert len(args.anno) == len(args.mode)
-    OptionsCheck()
+    options_check()
     # load genome fasta/size
     genome = pysam.Fastafile(args.genome)
-    genome_size = LoadGenomeSize(args.genome_size)
+    genome_size = load_genome_size(args.genome_size)
     # load exclude tabix list
     if args.exclude is not None:
         print >>sys.stderr, "load exclude regions"
-        exclude_list = LoadExclude(args.exclude)
+        exclude_list = load_exclude(args.exclude)
     else:
         exclude_list = []
     # load bed region
     if args.update:
-        region_list = LoadRegionAnno(args.bed)
+        region_list = load_region_anno(args.bed)
     else:
-        region_list = LoadRegion(args.bed)
+        region_list = load_region(args.bed)
     # load annotation files into tabix, bigwig, fasta or bam object
     anno_list = []
     label_list = args.label
@@ -114,7 +113,7 @@ def Main():
         region = region_list[nn]
         region.region_init(exclude_list, genome_size)
     # annotate 
-    print >>sys.stderr, "Annotation DHS"
+    print >>sys.stderr, "Annotation Region"
     progress = ProgressBar()
     for nn in progress(range(len(region_list))):
         region = region_list[nn]
@@ -122,7 +121,6 @@ def Main():
             anno = anno_list[nn]
             label = label_list[nn]
             mode = mode_list[nn]
-            region.get_anno(anno, label, mode, genome_size)
             try:
                 region.get_anno(anno, label, mode, genome_size)
             except:
@@ -131,9 +129,9 @@ def Main():
     print >>sys.stderr, "Annotation bed done"
     # write to output file
     if args.output == args.bed: # re-annotate existing file
-        fout = WriteToFile(args.output+'.tmp')
+        fout = open(args.output+'.tmp', 'w')
     else:
-        fout = WriteToFile(args.output)
+        fout = open(args.output, 'w')
     print >>fout, region_list[0].header()
     region_list = sorted(region_list, key = lambda bed: (bed.chrom, bed.start))
     for region in region_list:

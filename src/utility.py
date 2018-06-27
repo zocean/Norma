@@ -1,7 +1,7 @@
 #!/home/yangz6/Software/Python-2.7.5/python-2.7.5
 # Programmer : Yang Zhang 
 # Contact: yzhan116@illinois.edu
-# Last-modified: 21 Jan 2017 01:55:47
+# Last-modified: 19 Feb 2018 19:33:30
 
 import os,sys,argparse
 import math
@@ -36,7 +36,7 @@ class Region(BED):
         self.mid = (self.start+self.stop)/2
         self.verbose = 0
         # private
-        self.center = [Bed(chrom, start, stop)] # list of BED object for initial region after we remove regions overlapping with the excluding region
+        self.center = [BED(chrom, start, stop)] # list of BED object for initial region after we remove regions overlapping with the excluding region
         self.anno = {} # annotation table
         self.label = [] # label list
     def region_init(self, exclude_tabix_list, genome_size):
@@ -44,7 +44,7 @@ class Region(BED):
         get the corrected center region
         --exclude_tabix_list    exluding region in tabix format, removed from center regions
         '''
-        self.center = SubtractBed(self.chrom, self.start, self.stop, exclude_tabix_list)
+        self.center = subtract_bed(self.chrom, self.start, self.stop, exclude_tabix_list)
     def get_anno(self, anno, label, mode, genome_size):
         '''
         anno       python annotation object, eg. tabix object, bigwig object etc.
@@ -189,6 +189,8 @@ class Region(BED):
                 if size > o_len:
                     o_len = size
                     o_group = name
+            if o_group is None:
+                o_group = 'NA'
             return o_group
     def __get_bam_cov(self, bam):
         '''
@@ -222,7 +224,7 @@ class Region(BED):
         '''
         table = {'A':0,'C':0,'G':0,'T':0}
         for bed in self.center:
-            seq = GetSeqFromBed(bed.chrom, bed.start, bed.stop, genome)
+            seq = get_seq_from_bed(bed.chrom, bed.start, bed.stop, genome)
             for nt in ['A','C','G','T']:
                 table[nt] += seq.count(nt)
         total = sum(table.values())
@@ -237,7 +239,7 @@ class Region(BED):
         '''
         table = {'A':0,'C':0,'G':0,'T':0}
         for bed in self.center:
-            seq = GetSeqFromBed(bed.chrom, bed.start, bed.stop, genome)
+            seq = get_seq_from_bed(bed.chrom, bed.start, bed.stop, genome)
             for nt in ['A','C','G','T']:
                 table[nt] += seq.count(nt)
         return str(table['C']+table['G'])
@@ -472,10 +474,76 @@ class Gene(object):
 # Custom Function
 #################
 
-def LoadRegion(filename):
+def logging(text):
+    print >>sys.stderr, "Logging: " + text
+
+def warning(text):
+    print >>sys.stderr, "Warning: " + text
+
+def error(text,code=None):
+    if code is not None:
+        print >>sys.stderr, "Error Num:%d %s" % (code,text)
+    else:
+        print >>sys.stderr, "Error: %s" % (text)
+
+def check_folder_exist(folder,is_cover=True):
+    """Check the existence of folder, it not exist will create it"""
+    if not os.path.exists(folder):
+        os.mkdir(folder)
+    else:
+        if is_cover:
+            warning("output folder %s already exists, may overwrite the content inside it." % (folder))
+        else:
+            error("output folder %s already exists, will exit." % (folder))
+            exit(1)
+
+def check_file_exist(filename,is_cover=True):
+    """Check the existence of folder"""
+    if not os.path.isfile(filename):
+        pass
+    else:
+        if is_cover:
+            warning("output file %s already exsits, will overwrite the content inside it." % (filename))
+        else:
+            error("output file %s already exists, will exit." % (filename))
+            exit(1)
+
+def read_from_file(fin_name):
+    try:
+        fin = open(fin_name,"r")
+    except IOError:
+        error("Can't open file:%s to read." % (fin_name))
+        exit(1)
+    return fin
+
+def write_to_file(fout_name,is_cover=True):
+    if fout_name == 'stdout' or not fout_name:
+        fout = sys.stdout
+        warning("use stdout to report result")
+    else:
+        if check_file_exist(fout_name):
+            if is_cover:
+                warning("file:%s already exist. Old file will be covered by new file." % (fout_name))
+                try:
+                    fout = open(fout_name,"w")
+                except IOError:
+                    warning("Can't open file:%s to write. Use stdout instead." % (fout_name))
+                    fout = sys.stdout
+            else:
+                error("file:%s already exist" % (fout_name))
+                exit(1)
+        else:
+            try:
+                fout = open(fout_name,"w")
+            except IOError:
+                warning("Can't open file:%s to write. Use stdout instead." % (fout_name))
+                fout = sys.stdout
+    return fout
+ 
+def load_region(filename):
     '''load bed file into a simple list'''
     region_list = []
-    fin = ReadFromFile(filename)
+    fin = read_from_file(filename)
     for line in fin:
         if line.strip().startswith('#') or line.strip() == '':
             continue
@@ -487,33 +555,33 @@ def LoadRegion(filename):
     fin.close()
     return region_list
 
-def LoadRegionAnno(filename):
+def load_region_anno(filename):
     '''load bed region annotation file, the first row is the header containing the annotation label for each anno data'''
     region_list = []
-    fin = ReadFromFile(filename)
+    fin = read_from_file(filename)
     for line in fin:
         if line.strip() == '':
             continue
         row = line.strip().split()
         if line.strip().startswith('#'): # header
-            if len(row) > 4: # with additional column
-                label_list = row[4:]
+            if len(row) > 3: # with additional column
+                label_list = row[3:]
             continue
         chrom = row[0]
         start = int(row[1])
         stop = int(row[2])
         region = Region(chrom,start,stop)
         region.label = label_list
-        assert len(row) - 4 == len(label_list)
+        assert len(row) - 3 == len(label_list)
         for nn in range(len(label_list)):
-            region.anno[label_list[nn]] = row[4+nn]
+            region.anno[label_list[nn]] = row[3+nn]
         region_list.append(region)
     fin.close()
     return region_list
 
-def LoadGene(bed_filename):
+def load_gene(bed_filename):
     '''load 12 column gene annotation downloaded form UCSC'''
-    fin = ReadFromFile(bed_filename)
+    fin = read_from_file(bed_filename)
     genelist = []
     for line in fin: 
         if line.strip().startswith('#') or line.strip() == '':
@@ -549,9 +617,9 @@ def LoadGene(bed_filename):
     fin.close()
     return genelist_sorted
 
-def MergeSegment(filename):
+def merge_segment(filename):
     '''merge the segment in a 4 column bed file, assuming the bed has been sorted'''
-    fin = ReadFromFile(filename)
+    fin = read_from_file(filename)
     tmpout = tempfile.NamedTemporaryFile(delete=False)
     tmp_chrom = None
     tmp_start = None
@@ -597,9 +665,9 @@ def MergeSegment(filename):
     os.system("cp %s %s" % (tmpout.name,filename))
     os.unlink(tmpout.name)
 
-def LoadGenomeSize(filename):
+def load_genome_size(filename):
     table = {}
-    fin = ReadFromFile(filename)
+    fin = read_from_file(filename)
     for line in fin:
         if line.strip().startswith('#') or line.strip() == '':
             continue
@@ -607,7 +675,7 @@ def LoadGenomeSize(filename):
         table[row[0]] = int(row[1])
     return table
 
-def GetSeqFromBed(chrom, start, stop, genome):
+def get_seq_from_bed(chrom, start, stop, genome):
     '''
     get seq from a genomic region
     --chrom     chromosome name
@@ -624,10 +692,10 @@ def GetSeqFromBed(chrom, start, stop, genome):
         exit(1)
     return seq
 
-def SubtractBed(chrom, start, stop, exclude_tabix_list):
+def subtract_bed(chrom, start, stop, exclude_tabix_list):
     '''return bed region list that not within exclude tabix file'''
     if len(exclude_tabix_list) < 1 or exclude_tabix_list is None or (len(exclude_tabix_list) ==1 and exclude_tabix_list[0] is None):
-        return [Bed(chrom,start,stop)]
+        return [BED(chrom,start,stop)]
     region_list = []
     remove = {}
     pos = [start, stop]
@@ -676,11 +744,58 @@ def SubtractBed(chrom, start, stop, exclude_tabix_list):
             if is_remove:
                 continue
             else:
-                region_list.append(Bed(chrom, start, stop))
+                region_list.append(BED(chrom, start, stop))
     return region_list
 
-def Test():
+def sort_bed(filename,is_cover):
+    """sort bed file by chrom then by start"""
+    tmpout = tempfile.NamedTemporaryFile(delete=False)
+    genome = {}
+    fin = read_from_file(filename)
+    for line in fin:
+        if line.strip().startswith('#') or line.strip() == '':
+            continue
+        row = line.strip().split()
+        chrom = row[0]
+        genome[chrom] = 0
+    fin.close()
+    sorted_chrom = sort_genome(genome)
+    table = {}
+    fin = read_from_file(filename)
+    for line in fin:
+        if line.strip().startswith('#') or line.strip() == '':
+            continue
+        row = line.strip().split()
+        chrom = row[0]
+        start = int(row[1])
+        stop = int(row[2])
+        other = "\t".join(item for item in row[3:])
+        try:
+            table[chrom].append([chrom,start,stop,other])
+        except KeyError:
+            table[chrom] = [[chrom,start,stop,other]]
+    sorted_table = {}
+    for chrom in table.keys():
+        sorted_table[chrom] = sorted(table[chrom],key=lambda bed:bed[1])
+    for chrom in sorted_chrom:
+        for bed in sorted_table[chrom]:
+            print >>tmpout, bed[0] + '\t' + str(bed[1]) + '\t' + str(bed[2]) + '\t' + bed[3]
+    tmpout.flush()
+    fin.close()
+    if is_cover:
+        os.system("cp %s %s" % (tmpout.name,filename))
+        os.unlink(tmpout.name)
+        return filename
+    else:
+        return tmpout.name
+
+def create_tabix(filename,zippedname,mode):
+    os.system("bgzip -c %s >%s" % (filename,zippedname))
+    os.system("tabix -p %s %s" % (mode,zippedname))
+
+def test():
+    #TODO
     return
     
 if __name__=="__main__":
-    Test()
+    test()
