@@ -1,7 +1,7 @@
 #!/home/yangz6/Software/Python-2.7.5/python-2.7.5
 # Programmer : Yang Zhang 
 # Contact: yzhan116@illinois.edu
-# Last-modified: 19 Feb 2018 19:33:30
+# Last-modified: 12 Sep 2018 07:46:14 PM
 
 import os,sys,argparse
 import math
@@ -12,7 +12,6 @@ import pysam
 import pyfasta
 import pybedtools
 from itertools import product
-from TFBS_Evo.my_utility import *
 
 ##############
 # Custom Class
