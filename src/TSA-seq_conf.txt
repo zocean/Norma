@@ -1,0 +1,30 @@
+## global parameter
+# chromosome size
+genome_size =  /home/a-m/lzhang97/seq/BOWTIE2_INDEXES/hg38/hg38M.genome 
+# bowtie2 genome index prefix
+bowtie2_index = /home/a-m/lzhang97/seq/BOWTIE2_INDEXES/hg38/hg38M
+# path to the wigToBigWig
+wig2bigwig = /home/a-m/lzhang97/seq/software/wigToBigWig 
+# path to the Norma script
+norma = /home/a-m/lzhang97/seq/software/Norma.py 
+
+## tool specific paramter
+# parameters of bowtie2, only support generic parameters (parameters not sensitive to each sample) e.g. scoring parameters, number of thread etc.
+bowtie_opt = -t -p 16
+# parameters of Norma
+norma_opt = -r 20000 -w 20000
+
+## experiment
+# exp name, final TSA-seq score will be named as exp_name.bw
+exp_name = HCT_E_SON_PD1_hg38 
+# a list of fastq file for pulldown
+fastq_pulldown = test_pulldown_2.fastq test_pulldown_2.fastq
+# name for pulldown bam file (no suffix, such as .bam)
+label_pulldown = HCT_E_SON_pulldown
+# a list of fastq file for input
+fastq_input = test_input_1.fastq
+# name for input bam file 
+label_input =  HCT_E_SON_input
+
+# output
+output_folder = test
