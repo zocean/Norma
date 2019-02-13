@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # Programmer : zocean
 # Date: 
-# Last-modified: 13 Feb 2019 14:51:17
+# Last-modified: 13 Feb 2019 15:12:18
 
 import os,sys,argparse
 import math
@@ -52,7 +52,7 @@ def Main():
     if args.bw2wig == 'sys':
         os.system("bigWigToWig %s %s" % (args.bw, wig_file.name))
     else:
-        os.system("%s %s %s" % (args.wig2bw, args.bw, wig_file.name))
+        os.system("%s %s %s" % (args.bw2wig, args.bw, wig_file.name))
     for line in ReadFromFile(wig_file.name):
         if line.strip().startswith('#') or line.strip() == '':
             print >>out, line.strip()
