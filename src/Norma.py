@@ -218,9 +218,9 @@ def WriteBedGraph(output_file,hash_table,genome_table,resolution,step):
                 continue
             if jj*resolution + win_half + resolution > genome_table[chrs[ii]]: # last window
                 new_span = jj*resolution + win_half + resolution - genome_table[chrs[ii]]
-                print >>fo, "%s\t%s\t%s\t%.6f" % (chrs[ii], jj*resolution+win_half, jj*resolution+win_half+new_span, chr_list[jj])
+                print >>fo, "%s\t%s\t%s\t%.6f" % (chrs[ii], jj*resolution+win_half, jj*resolution+win_half+new_span, log(chr_list[jj],2))
             else:
-                print >>fo, "%s\t%s\t%s\t%.6f" % (chrs[ii], jj*resolution+win_half, jj*resolution+win_half+resolution, chr_list[jj])
+                print >>fo, "%s\t%s\t%s\t%.6f" % (chrs[ii], jj*resolution+win_half, jj*resolution+win_half+resolution, log(chr_list[jj],2))
     fo.flush()
     fo.close()
 
