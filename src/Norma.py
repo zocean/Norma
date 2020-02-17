@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # Programmer : Yang Zhang
 # Contact: yzhan116@illinois.edu
-# Last-modified: 28 Mar 2019 01:11:04
+# Last-modified: 17 Feb 2020 05:46:19 PM
 
 import os,sys,argparse
 from math import log
@@ -17,6 +17,7 @@ def parse_argument():
     p.add_argument('-w','--win',dest = "win", type = int, default = 1000,  help = "Sliding window size(bp)")
     p.add_argument('-e','--exp',dest = "bamexp", type = str, help = "pulldown group bam file")
     p.add_argument('-c','--con',dest = "bamcon", type = str, help = "control group bam file")
+    p.add_argument('--no_shift',dest="no_shift",action="store_true",help="no shift on report signal, by default, score are reported in the center of the bin. Setting this option means that the score starts from the beginning of the bin")
     p.add_argument('-g','--genome',dest = "genome", type = str, help = "genome chromosome size file (used for wigToBigWig)")
     p.add_argument('-o','--output',dest = "output", type = str, help = "the prefix of output wig files without .wig, eg. ") 
     p.add_argument('--wig2bw',dest = "wig2bw", type = str, help = "program location (full path eg. /home/zocean/wigToBigWig of wigToBigWig program, 'sys' means wigToBigWig is the system path")
@@ -177,11 +178,14 @@ def GetRatio(norm_win):
                 table[chrom].append(1.0) # chromosome gap region
     return table
 
-def WriteWig(output_file,hash_table,genome_table,resolution,step):
+def WriteWig(output_file,hash_table,genome_table,resolution,step,no_shift = False):
     '''
     write to wig file for comparison
     '''
-    win_half = int(resolution*step/2)
+    if no_shift:
+        win_half = 1
+    else:
+        win_half = int(resolution*step/2)
     chrs = hash_table.keys()
     chrs.sort()
     fo = open(output_file+".wig","w")
@@ -198,15 +202,18 @@ def WriteWig(output_file,hash_table,genome_table,resolution,step):
                 new_span = genome_table[chrs[ii]] - jj*resolution - win_half
                 print >>fo, "variableStep chrom=" + chrs[ii] + " span=" + str(new_span)
                 is_end = True
-            print >>fo, "%d\t%.6f" % (jj*resolution + win_half, log(chr_list[jj],2))
+            print >>fo, "%d\t%.6f" % (jj*resolution + win_half, log(chr_list[jj], 2))
     fo.flush()
     fo.close()
 
-def WriteBedGraph(output_file,hash_table,genome_table,resolution,step):
+def WriteBedGraph(output_file,hash_table,genome_table,resolution,step,no_shift = False):
     '''
     write to bedgraph file for comparison
     '''
-    win_half = int(resolution*step/2)
+    if no_shift:
+        win_half = 0
+    else:
+        win_half = int(resolution*step/2)
     chrs = hash_table.keys()
     chrs.sort()
     fo = open(output_file+".bedgraph","w")
@@ -289,8 +296,8 @@ def Main():
     del Con_bins
     # Step 3 Calculate Reads per bin adjusted for input control DNA variations for pulldown sample
     logging("Step3 normalize pulldown read count using input control")
-    #WriteBedGraph(args.output+"_Exp", Exp_win, genome_table, args.res, step)
-    #WriteBedGraph(args.output+"_Con", Con_win, genome_table, args.res, step)
+    #WriteBedGraph(args.output+"_Exp", Exp_win, genome_table, args.res, step, args.no_shift)
+    #WriteBedGraph(args.output+"_Con", Con_win, genome_table, args.res, step, args.no_shift)
     norm_win = WinNormalize(Exp_win, Con_win)
     # release memory
     del Exp_win
@@ -301,7 +308,7 @@ def Main():
     # Step 5 write to wig files
     logging("Step5 write ")
     logging("## Step5 Write log2(ratio) normalized read count to wig file")
-    WriteWig(args.output,ratio_win,genome_table,args.res,step)
+    WriteWig(args.output,ratio_win,genome_table,args.res,step,args.no_shift)
     if args.wig2bw is not None:
         logging("Step6 convert wig to bigwig")
         if args.wig2bw == 'sys':
