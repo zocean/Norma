@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # Programmer : Yang Zhang
 # Contact: yzhan116@illinois.edu
-# Last-modified: 02 Mar 2018 22:23:58
+# Last-modified: 27 Oct 2020 23:30:42
 
 import os,sys,argparse
 from math import log
@@ -303,7 +303,7 @@ def Main():
     if args.wig2bw is not None:
         logging("Step6 convert wig to bigwig")
         if args.wig2bw == 'sys':
-            os.system("./wigToBigWig %s %s %s" % (args.output+".wig", args.genome, args.output+".bw"))
+            os.system("wigToBigWig %s %s %s" % (args.output+".wig", args.genome, args.output+".bw"))
         else:
             os.system(args.wig2bw + " %s %s %s" % (args.output+".wig", args.genome, args.output+".bw")) 
     #print "## Step6.2 write experimental group read count to wig file"
