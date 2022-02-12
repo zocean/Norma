@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # Programmer : Yang Zhang
 # Contact: yzhan116@illinois.edu
-# Last-modified: 27 Oct 2020 23:30:42
+# Last-modified: 23 Jun 2021 05:11:58 PM
 
 import os,sys,argparse
 from math import log
@@ -84,6 +84,8 @@ def BamToBin(bamfile,binsize):
             continue
         pos = alignment.pos + alignment.alen
         chr_name = samfile.getrname(alignment.tid)
+        if chr_table.get(chr_name, None) is None:
+            continue
         try:
             bin_hash[chr_name][pos/binsize] += 1.0
         except KeyError:
