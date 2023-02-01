@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # Programmer : zocean
-# Last-modified: 15 Feb 2017 13:39:33
+# Last-modified: 01 Feb 2023 04:15:16 PM
 
 import os,sys,argparse
 from math import log
@@ -200,9 +200,16 @@ def BamMetrics(bamfile,readlength):
     for i in range(len(chr_dict)):
         lengths.append(chr_dict[chrs[i]])   
     metrics = {}
-    metrics["mappable_reads"] = samfile.mapped
-    metrics["#chromosome"] = len(chrs)
-    metrics["genome_size"] = sum(lengths)
+    metrics["mappable_reads"] = 0
+    metrics["#chromosome"] = 0
+    metrics["#chromosome"] = 0
+    metrics["genome_size"] = 0
+    idx_stats = samfile.get_index_statistics()
+    for idx in idx_stats:
+        if idx.contig in chrs:
+            metrics["mappable_reads"] += idx.mapped
+            metrics["#chromosome"] += 1
+            metrics["genome_size"] += chr_dict[idx.contig]
     #change normlization method
     #estimate_coverage = 0
     #for i in range(len(chrs)):

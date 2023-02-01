@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # Programmer : Yang Zhang
 # Contact: yzhan116@illinois.edu
-# Last-modified: 23 Jun 2021 05:11:58 PM
+# Last-modified: 01 Feb 2023 04:21:51 PM
 
 import os,sys,argparse
 from math import log
@@ -60,8 +60,6 @@ def BamToBin(bamfile,binsize):
     bin_hash = {}
     # read the indexed bam file using pysam
     samfile = pysam.Samfile(bamfile,"rb")
-    # get number of mapped reads
-    total_mapped = samfile.mapped
     # read chromosome name (chr1 etc.) and the length into a dictionary
     chr_table = {}
     for nn in range(len(samfile.references)):
@@ -69,6 +67,13 @@ def BamToBin(bamfile,binsize):
     # remove user defined chromosome
     chr_removed_list = filterPick(chr_table.keys(),chr_filter)
     chr_table = delete_key(chr_table,chr_removed_list)
+    # get number of mapped reads
+    total_mapped = 0
+    idx_stats = samfile.get_index_statistics()
+    for idx in idx_stats:
+        if idx.contig in chrs_dict.keys():
+            total_mapped += idx.mapped
+    logging("Total mapped reads is: %d" % (total_mapped))
     # initialization count table
     for chrom,length in chr_table.items():
         bin_num = length/binsize
